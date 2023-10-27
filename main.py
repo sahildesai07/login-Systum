@@ -1,12 +1,11 @@
-#ultroidofficial
-
 import logging
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackContext, job
+from telegram import Update, ParseMode
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, ConversationHandler, CallbackContext, JobQueue
 from datetime import datetime, timedelta
 
-# Define your bot's token here
-TOKEN = 'YOUR_BOT_TOKEN'
+# Define your bot's token and the channel ID here
+TOKEN = '6233157191:AAHoYxfToEUoCKVvV8caOoav2bqnM1lkXWo'
+CHANNEL_ID = -1001709730026 # Replace with your channel ID
 
 # Define the password for authentication
 correct_password = '12345pass'
@@ -54,6 +53,12 @@ def handle_password(update: Update, context: CallbackContext):
         login_time[user_id] = datetime.now()
 
         context.job_queue.run_once(logout_user, timedelta(hours=24), context=user_id)
+
+        # Send user details to the specified channel
+        user = update.message.from_user
+        message = f"New login: {user.first_name} {user.last_name} (@{user.username})\nUser ID: {user.id}"
+        context.bot.send_message(CHANNEL_ID, message)
+
         update.message.reply_text("Login successful. You are now logged in for 24 hours.")
         return AUTHORIZED
     else:
@@ -86,7 +91,9 @@ def about(update: Update, context: CallbackContext):
         else:
             login_time_str = "N/A"
 
-        update.message.reply_text(f"User ID: {user_id}\nLast Login Time: {login_time_str}")
+        user = update.message.from_user
+        details = f"User ID: {user.id}\nLast Login Time: {login_time_str}\n"
+        update.message.reply_text(details, parse_mode=ParseMode.MARKDOWN)
     else:
         update.message.reply_text("You need to log in first using /login.")
 
